@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提示词超市</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #6c63ff;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        .main-category-list, .sub-category-list, .prompt-list {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        .main-category-item, .sub-category-item, .prompt-item {
+            padding: 5px 10px;
+            background-color: #6c63ff;
+            color: #ffffff;
+            border-radius: 8px;
+            margin: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .main-category-item:hover, .sub-category-item:hover, .prompt-item:hover {
+            background-color: #5a54d1;
+        }
+        .main-category-item:active, .sub-category-item:active, .prompt-item:active {
+            transform: scale(0.95);
+            background-color: #4e44c9;
+        }
+        .main-category-item.selected, .sub-category-item.selected, .prompt-item.selected {
+            background-color: #888;
+        }
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .input-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-section textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            resize: none;
+        }
+        .operation-buttons {
+            display: none;
+            position: relative;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            background-color: #ffffff;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .operation-buttons-row {
+            display: flex;
+            gap: 5px;
+        }
+        .operation-buttons button {
+            padding: 5px 10px;
+            background-color: #6c63ff;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .operation-buttons button:hover {
+            background-color: #5a54d1;
+        }
+        .operation-buttons button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .tag-content {
+            cursor: pointer;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .copy-button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .send-to-prompt-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .send-to-prompt-button:hover {
+            background-color: #0056b3;
+        }
+
+        .back-to-home-button {
+            padding: 8px 16px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .back-to-home-button:hover {
+            background-color: #c82333;
+        }
+        .main-category-list, .sub-category-list {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .main-category-item, .sub-category-item {
+            padding: 5px 10px;
+            background-color: #6c63ff;
+            color: #ffffff;
+            border-radius: 8px;
+            margin: 5px;
+            cursor: pointer;
+            text-align: center;
+            display: inline-block;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .tag-container {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            white-space: nowrap;
+        }
+
+        .tag {
+            display: inline-block;
+            flex-direction: column;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #6c63ff;
+            color: #ffffff;
+            border-radius: 8px;
+            margin: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="main-category-list" id="main-category-list">
+
+            </div>
+            <div class="sub-category-list" id="sub-category-list">
+
+            </div>
+            <div class="input-section" id="input-section-1">
+                <label for="prompt-input-1">正向提示词</label>
+                <textarea id="prompt-input-1" class="prompt-input" placeholder="您的提示词将显示在这里..."></textarea>
+                <div id="tag-container-1" class="tag-container">
+
+                </div>
+                <div class="button-container">
+                    <button id="copyButton1" class="copy-button">复制</button>
+                </div>
+            </div>
+            <div class="input-section" id="input-section-2">
+                <label for="prompt-input-2">反向提示词</label>
+                <textarea id="prompt-input-2" class="prompt-input" placeholder="您的提示词将显示在这里..."></textarea>
+                <div id="tag-container-2" class="tag-container">
+
+                </div>
+                <div class="button-container">
+                    <button id="copyButton2" class="copy-button">复制</button>
+                </div>
+            </div>
+            <div class="button-container">
+                <button id="sendToPromptButton" class="send-to-prompt-button">发送到prompt</button>
+            </div>
+            <div class="prompt-list" id="prompt-list">
+                <!-- 提示词列表 -->
+            </div>
+        </div>
+    </div>
+    <script>
+        let allCategories = {};
+        let allPrompts = {};
+        let currentTag = null;
+        let currentInputSectionId = 'input-section-1';
+
+        async function loadAllCategories() {
+            const [mainCategories, subCategories] = await Promise.all([
+                fetch('/main_categories').then(response => response.json()),
+                fetch('/sub_categories').then(response => response.json())
+            ]);
+
+            allCategories = { mainCategories, subCategories };
+            renderMainCategories();
+
+            if (mainCategories.length > 0) {
+                const firstMainCategoryId = mainCategories[0].id;
+                renderSubCategories(firstMainCategoryId);
+
+                if (subCategories.length > 0) {
+                    const firstSubCategoryId = subCategories.find(cat => cat.main_category_id === firstMainCategoryId).id;
+                    loadPrompts(firstSubCategoryId);
+                }
+            }
+        }
+
+        function renderMainCategories() {
+            const mainCategoryList = document.getElementById('main-category-list');
+            mainCategoryList.innerHTML = '';
+            mainCategoryList.style.display = 'block';
+
+            allCategories.mainCategories.forEach(mainCategory => {
+                const mainCategoryItem = document.createElement('div');
+                mainCategoryItem.className = 'main-category-item';
+                mainCategoryItem.textContent = mainCategory.name;
+                mainCategoryItem.dataset.id = mainCategory.id;
+                mainCategoryItem.onclick = () => renderSubCategories(mainCategory.id);
+                mainCategoryList.appendChild(mainCategoryItem);
+            });
+        }
+
+        function renderSubCategories(mainCategoryId) {
+            const subCategoryList = document.getElementById('sub-category-list');
+            subCategoryList.innerHTML = '';
+            subCategoryList.style.display = 'block';
+
+            allCategories.subCategories
+                .filter(subCategory => subCategory.main_category_id === mainCategoryId)
+                .forEach(subCategory => {
+                    const subCategoryItem = document.createElement('div');
+                    subCategoryItem.className = 'sub-category-item';
+                    subCategoryItem.textContent = subCategory.name;
+                    subCategoryItem.dataset.id = subCategory.id;
+                    subCategoryItem.onclick = () => loadPrompts(subCategory.id);
+                    subCategoryList.appendChild(subCategoryItem);
+                });
+        }
+
+        async function loadPrompts(subCategoryId) {
+            const response = await fetch(`/prompts/${subCategoryId}`);
+            const prompts = await response.json();
+            allPrompts[subCategoryId] = prompts;
+            renderPrompts(prompts);
+        }
+
+        function renderPrompts(prompts) {
+            const promptList = document.getElementById('prompt-list');
+            promptList.style.display = 'block';
+            promptList.innerHTML = '';
+
+            prompts.forEach(prompt => {
+                const promptItem = document.createElement('div');
+                promptItem.className = 'prompt-item';
+                promptItem.textContent = prompt.cn;
+                promptItem.dataset.value = prompt.en;
+                promptItem.onclick = () => toggleTag(prompt.cn, prompt.en, promptItem);
+                promptList.appendChild(promptItem);
+            });
+        }
+
+        function toggleTag(cn, en, promptItem) {
+            const inputSection = document.getElementById(currentInputSectionId);
+            const promptInput = inputSection.querySelector('.prompt-input');
+            let promptValue = promptInput.value.split(',').map(p => p.trim()).filter(Boolean);
+            const tagContainer = inputSection.querySelector('.tag-container');
+            let existingTag = Array.from(tagContainer.children).find(tag => tag.dataset.originalValue === en);
+
+            if (existingTag) {
+                tagContainer.removeChild(existingTag);
+                promptValue = promptValue.filter(p => !p.includes(existingTag.dataset.originalValue));
+                promptItem.classList.remove('selected');
+                updateCategoryItemState(promptItem, false);
+            } else {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.dataset.weight = 1;
+                tag.dataset.value = en;
+                tag.dataset.originalValue = en;
+                tag.dataset.cn = cn;
+                tag.dataset.minusClicks = 0;
+                tag.dataset.roundMinusClicks = 0;
+                tag.innerHTML = `<span class="tag-content">${cn}</span>`;
+                tag.onclick = (e) => {
+                    e.stopPropagation();
+                    if (e.target.className === 'tag-content') {
+                        selectTag(tag);
+                    }
+                };
+                tagContainer.appendChild(tag);
+                promptValue.push(en);
+                promptItem.classList.add('selected');
+                updateCategoryItemState(promptItem, true);
+            }
+
+            promptInput.value = promptValue.filter(Boolean).join(', ');
+            updatePromptInput();
+        }
+
+        function createOperationButtons() {
+            const operationButtons = document.createElement('div');
+            operationButtons.className = 'operation-buttons';
+
+            const row1 = document.createElement('div');
+            row1.className = 'operation-buttons-row';
+            const increaseButton = document.createElement('button');
+            increaseButton.textContent = '+';
+            increaseButton.onclick = (e) => {
+                e.stopPropagation();
+                increaseWeight();
+            };
+            const decreaseButton = document.createElement('button');
+            decreaseButton.textContent = '-';
+            decreaseButton.onclick = (e) => {
+                e.stopPropagation();
+                decreaseWeight();
+            };
+            decreaseButton.disabled = true;
+            row1.appendChild(increaseButton);
+            row1.appendChild(decreaseButton);
+
+            const row2 = document.createElement('div');
+            row2.className = 'operation-buttons-row';
+            const addSquareButton = document.createElement('button');
+            addSquareButton.textContent = '[+]';
+            addSquareButton.onclick = (e) => {
+                e.stopPropagation();
+                addBrackets('[');
+            };
+            const removeSquareButton = document.createElement('button');
+            removeSquareButton.textContent = '[-]';
+            removeSquareButton.onclick = (e) => {
+                e.stopPropagation();
+                removeBrackets('[');
+            };
+            removeSquareButton.disabled = true;
+            row2.appendChild(addSquareButton);
+            row2.appendChild(removeSquareButton);
+
+            const row3 = document.createElement('div');
+            row3.className = 'operation-buttons-row';
+            const addRoundButton = document.createElement('button');
+            addRoundButton.textContent = '(+)';
+            addRoundButton.onclick = (e) => {
+                e.stopPropagation();
+                addBrackets('(');
+            };
+            const removeRoundButton = document.createElement('button');
+            removeRoundButton.textContent = '(-)';
+            removeRoundButton.onclick = (e) => {
+                e.stopPropagation();
+                removeBrackets('(');
+            };
+            removeRoundButton.disabled = true;
+            row3.appendChild(addRoundButton);
+            row3.appendChild(removeRoundButton);
+
+            operationButtons.appendChild(row1);
+            operationButtons.appendChild(row2);
+            operationButtons.appendChild(row3);
+
+            return operationButtons;
+        }
+
+        function increaseWeight() {
+            if (!currentTag) return;
+            let weight = parseFloat(currentTag.dataset.weight);
+            if (weight < 1.5) {
+                weight = (weight + 0.1).toFixed(1);
+                currentTag.dataset.weight = weight;
+                currentTag.dataset.value = weight === '1.0' ? currentTag.dataset.originalValue : `(${currentTag.dataset.originalValue}:${weight})`;
+                updatePromptInput();
+                updateButtonStates();
+            }
+        }
+
+        function decreaseWeight() {
+            if (!currentTag) return;
+            let weight = parseFloat(currentTag.dataset.weight);
+            if (weight > 0.3) {
+                weight = (weight - 0.1).toFixed(1);
+                currentTag.dataset.weight = weight;
+                currentTag.dataset.value = weight === '1.0' ? currentTag.dataset.originalValue : `(${currentTag.dataset.originalValue}:${weight})`;
+                updatePromptInput();
+                updateButtonStates();
+            }
+        }
+
+        function addBrackets(type) {
+            if (!currentTag) return;
+            let value = currentTag.dataset.value;
+            console.log(`Before adding brackets: ${value}`);
+            if (type === '(') {
+                if (value.startsWith('(((')) return;
+                value = `(${value})`;
+                currentTag.dataset.roundMinusClicks = parseInt(currentTag.dataset.roundMinusClicks) + 1;
+            } else if (type === '[') {
+                if (value.startsWith('[[[')) return;
+                value = `[${value}]`;
+                currentTag.dataset.minusClicks = parseInt(currentTag.dataset.minusClicks) + 1;
+            }
+            currentTag.dataset.value = value;
+            console.log(`After adding brackets: ${value}`);
+            updatePromptInput();
+            updateButtonStates();
+        }
+
+        function removeBrackets(type) {
+            if (!currentTag) return;
+            let value = currentTag.dataset.value;
+            console.log(`Before removing brackets: ${value}`);
+            if (type === '(') {
+                if (currentTag.dataset.roundMinusClicks > 0) {
+                    value = value.replace(/^\(|\)$/g, '');
+                    currentTag.dataset.roundMinusClicks = parseInt(currentTag.dataset.roundMinusClicks) - 1;
+                }
+            } else if (type === '[') {
+                if (currentTag.dataset.minusClicks > 0) {
+                    value = value.replace(/^\[|\]$/g, '');
+                    currentTag.dataset.minusClicks = parseInt(currentTag.dataset.minusClicks) - 1;
+                }
+            }
+            currentTag.dataset.value = value;
+            console.log(`After removing brackets: ${value}`);
+            updatePromptInput();
+            updateButtonStates();
+        }
+
+        function updatePromptInput() {
+            const inputSection = document.getElementById(currentInputSectionId);
+            const tags = inputSection.querySelectorAll('.tag');
+            const promptValues = Array.from(tags).map(tag => {
+                const weight = parseFloat(tag.dataset.weight);
+                const value = tag.dataset.value;
+                return value;
+            });
+            inputSection.querySelector('.prompt-input').value = promptValues.join(', ');
+        }
+
+        function updateButtonStates() {
+            const operationButtons = currentTag.querySelector('.operation-buttons');
+            const decreaseButton = operationButtons.querySelector('.operation-buttons-row:nth-child(1) button:nth-child(2)');
+            const removeSquareButton = operationButtons.querySelector('.operation-buttons-row:nth-child(2) button:nth-child(2)');
+            const removeRoundButton = operationButtons.querySelector('.operation-buttons-row:nth-child(3) button:nth-child(2)');
+
+            decreaseButton.disabled = currentTag.dataset.weight <= 0.3;
+            removeSquareButton.disabled = currentTag.dataset.minusClicks <= 0;
+            removeRoundButton.disabled = currentTag.dataset.roundMinusClicks <= 0;
+        }
+
+        function selectTag(tag) {
+            if (currentTag === tag) {
+                currentTag.querySelector('.operation-buttons').style.display = 'none';
+                currentTag = null;
+            } else {
+                if (currentTag) {
+                    currentTag.querySelector('.operation-buttons').style.display = 'none';
+                }
+                currentTag = tag;
+                let operationButtons = currentTag.querySelector('.operation-buttons');
+                if (!operationButtons) {
+                    operationButtons = createOperationButtons();
+                    currentTag.appendChild(operationButtons);
+                }
+                operationButtons.style.display = 'flex';
+                updateButtonStates();
+            }
+        }
+
+        function updateCategoryItemState(promptItem, isSelected) {
+            const subCategoryItem = promptItem.closest('.sub-category-item');
+            const mainCategoryItem = subCategoryItem ? subCategoryItem.closest('.main-category-item') : null;
+
+            if (isSelected) {
+                if (subCategoryItem) subCategoryItem.classList.add('selected');
+                if (mainCategoryItem) mainCategoryItem.classList.add('selected');
+            } else {
+                if (subCategoryItem && !Array.from(subCategoryItem.querySelectorAll('.prompt-item')).some(item => item.classList.contains('selected'))) {
+                    subCategoryItem.classList.remove('selected');
+                }
+                if (mainCategoryItem && !Array.from(mainCategoryItem.querySelectorAll('.sub-category-item')).some(item => item.classList.contains('selected'))) {
+                    mainCategoryItem.classList.remove('selected');
+                }
+            }
+        }
+
+        function enableHorizontalScrolling(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    element.scrollLeft += event.deltaY;
+                });
+            }
+        }
+
+        document.addEventListener('click', () => {
+            if (currentTag) {
+                currentTag.querySelector('.operation-buttons').style.display = 'none';
+                currentTag = null;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllCategories();
+
+
+            enableHorizontalScrolling('main-category-list');
+            enableHorizontalScrolling('sub-category-list');
+            enableHorizontalScrolling('tag-container-1');
+            enableHorizontalScrolling('tag-container-2');
+
+            document.querySelectorAll('.copy-button').forEach(copyButton => {
+                copyButton.addEventListener('click', () => {
+                    const inputSection = copyButton.closest('.input-section');
+                    const promptInput = inputSection.querySelector('.prompt-input');
+                    promptInput.select();
+                    document.execCommand('copy');
+                });
+            });
+
+
+            const sendToPromptButton = document.getElementById('sendToPromptButton');
+            sendToPromptButton.addEventListener('click', () => {
+                const promptInput1 = document.getElementById('prompt-input-1').value;
+                const promptInput2 = document.getElementById('prompt-input-2').value;
+                window.location.href = `https://panllq.cpolar.top/?prompt=${encodeURIComponent(promptInput1)}&negative-prompt=${encodeURIComponent(promptInput2)}`;
+            });
+
+            const backToHomeButton = document.createElement('button');
+            backToHomeButton.textContent = '返回主页';
+            backToHomeButton.className = 'back-to-home-button';
+            backToHomeButton.onclick = () => {
+                window.location.href = 'https://panllq.cpolar.top/';
+            };
+            document.body.appendChild(backToHomeButton);
+
+            document.querySelectorAll('.input-section').forEach(inputSection => {
+                inputSection.addEventListener('click', () => {
+                    currentInputSectionId = inputSection.id;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
