@@ -11,7 +11,7 @@ from func.database.azure.func import upload_to_azure
 from func.database.mysql.func import handle_request, create_connection, get_db_connection
 from func.draw.func import *
 
-app = Flask(__name__, static_folder='backend')
+app = Flask(__name__, static_folder='static')
 CORS(app)  # 启用 CORS 支持
 
 # 设置日志记录
