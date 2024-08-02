@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIGC</title>
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            width: calc(100% - 10px);
+            top: 5px;
+            left: 5px;
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex: 1;
+        }
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #6c63ff;
+        }
+        nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #333;
+            cursor: pointer;
+        }
+        main {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            background-color: #ffffff;
+            margin-top: 60px;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .home-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .prompt-section {
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .prompt-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .prompt-section textarea {
+            min-height: 100px;
+            max-height: 600px;
+            overflow-y: auto;
+            resize: none;
+        }
+        .prompt-section textarea, .prompt-section input, .prompt-section select {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .default-model-button, .controlnet-button, .more-options-button, .assistant-button, .image-inversion-button, .prompt-market-button {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .default-model-button.active, .controlnet-button.active, .more-options-button.active, .assistant-button.active, .image-inversion-button.active {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .model-category-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .model-category-buttons button {
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            flex-grow: 1;
+            margin: 0 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .model-category-buttons button.selected {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .image-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .image-settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .image-settings input {
+            width: 100%;
+            max-width: 100px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .image-count-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .image-count {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .image-count.selected {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .controlnet-slides, .controlnet-params-container, .dropdown-container, .high-res-options-container, .more-options-container, .adetailer-options-container, .assistant-container, .image-inversion-container {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .controlnet-slide, .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #e0e0e0;
+            border-radius: 4px;
+            padding: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .controlnet-slide img {
+            display: none;
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .uploaded-image {
+            max-width: 100%;
+            max-height: 150px;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .generated-images {
+            flex: 1;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .generated-images h2 {
+            margin-top: 0;
+        }
+        .generated-images .images-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .generated-images .image {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        .generated-images .image img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        .history-records {
+            background-color: #ffffff;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .generate-button, .send-button, .send-seed-button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background: linear-gradient(to right, #6c63ff, #007bff);
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .progress-container {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .progress-bar-fill {
+            height: 20px;
+            width: 0;
+            background-color: #6c63ff;
+            border-radius: 8px;
+        }
+        .folder-selection, .model-selection {
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+            gap: 2px;
+            margin-bottom: 5px;
+            position: relative;
+        }
+        .folder-selection button, .image-inversion-button, .prompt-market-button, .model-category-buttons button, .more-options-button, .default-model-button, .controlnet-button, .assistant-button, .high-res-button, .adetailer-button {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background-color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .model-selection img {
+            max-height: 200px;
+            width: auto;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            border-radius: 10px;
+        }
+        .model-selection figure {
+            position: relative;
+            display: inline-block;
+            margin: 3px;
+        }
+        .model-selection figcaption {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+        .model-selection img:hover {
+            transform: scale(1.1);
+        }
+        .model-selection img.selected {
+            border: 1px solid #007bff;
+        }
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .image-modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .image-modal img {
+            width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        #image-info pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .loading-overlay {
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-spinner {
+            border: 8px solid rgba(0, 0, 0, 0.1);
+            border-top: 8px solid #6c63ff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .has-selected-model {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .controlnet-navigation {
+            display: none;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .controlnet-navigation.active {
+            display: flex;
+        }
+        .controlnet-navigation button {
+            margin: 0 5px;
+            padding: 10px;
+            border: none;
+            background-color: #6c63ff;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .send-seed-button:hover {
+            background: linear-gradient(to right, #5a54d1, #0066cc);
+        }
+        .send-seed-button:active {
+            background: linear-gradient(to right, #4a45a6, #0052a3);
+        }
+        .adetailer-options-container {
+            flex-direction: column;
+            gap: 5px;
+        }
+        .adetailer-options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 5px;
+        }
+        .adetailer-options-row select {
+            width: calc(33.33% - 10px);
+        }
+        .controlnet-slide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            border: 2px dashed #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .delete-button {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .dropdown-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 10px;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .dropdown-container > div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        @media (max-width: 1024px) {
+            main {
+                flex-direction: column;
+            }
+            .home-container {
+                flex-direction: column;
+            }
+            .prompt-section {
+                width: 100%;
+                max-width: none;
+            }
+        }
+        .more-options-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .more-options-row label,
+        .more-options-row input,
+        .more-options-row select {
+            flex: 1;
+            margin-bottom: 10px;
+        }
+        .high-res-options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .high-res-options-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .high-res-options-row label,
+        .high-res-options-row input,
+        .high-res-options-row select {
+            flex: 1;
+            margin-bottom: 10px;
+        }
+        .adetailer-button.active,
+        .high-res-button.active {
+            background-color: #6c63ff;
+            color: white;
+        }
+        .folder-selection button.selected {
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #0056b3;
+            transform: scale(1.05);
+            transition: transform 0.3s, background-color 0.3s, color 0.3s, border 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .home-container {
+                flex-direction: column;
+            }
+            .prompt-section {
+                width: 100%;
+            }
+            nav {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+                margin: 10px 0;
+            }
+            nav a {
+                margin: 5px 10px;
+                font-size: 15px;
+            }
+            .image-settings-row {
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 5px;
+            }
+            .image-settings input, .image-settings select {
+                width: calc(50% - 10px);
+            }
+            .more-options-button {
+                width: 100%;
+                padding: 10px;
+                font-size: 14px;
+            }
+            .adetailer-options-container {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .adetailer-options-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 5px;
+            }
+            .adetailer-options-row select {
+                width: calc(33.33% - 10px);
+            }
+            .more-options-button, .high-res-button, .adetailer-button {
+                width: 100%;
+                text-align: center;
+            }
+            .adetailer-options-container, .high-res-options-container {
+                padding: 10px;
+            }
+            .more-options-container {
+                padding: 10px;
+            }
+            .generated-images .images-container {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .generated-images .image {
+                width: calc(33.33% - 10px);
+                max-width: none;
+                margin: 5px;
+            }
+        }
+        @media (max-width: 480px) {
+            nav a {
+                font-size: 13px;
+            }
+            .prompt-section {
+                padding: 10px;
+            }
+            .prompt-section textarea, .prompt-section input, .prompt-section select, .prompt-section button {
+                padding: 8px;
+            }
+            .generate-button {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AIGC</div>
+        </header>
+        <main>
+            <section id="home-section" class="content-section active">
+                <div class="home-container">
+                    <div class="prompt-section">
+                        <textarea id="prompt" placeholder="描述信息越详细，结果更佳" oninput="adjustHeight(this)"></textarea>
+                        <input type="text" id="negative-prompt" placeholder="负面提示词">
+                        <button class="controlnet-button" id="controlnet-button" onclick="toggleControlnet()">控制网</button>
+                        <button class="assistant-button" id="assistant-button" onclick="toggleAssistant()">AI提示词助手</button>
+                        <button class="image-inversion-button" id="image-inversion-button" onclick="toggleImageInversion()">图像反推</button>
+                        <button class="prompt-market-button" id="prompt-market-button" onclick="goToPromptMarket()">提示词超市</button>
+
+                        <div class="assistant-container" id="assistant-container">
+                            <input type="text" id="assistant-input" placeholder="输入提示词">
+                            <select id="model-select">
+                                <option value="anything">通用</option>
+                            </select>
+                            <button class="send-button" onclick="sendAssistantContent()">发送</button>
+                        </div>
+                        <div id="controlnet-slides" class="controlnet-slides">
+                            <div id="controlnet-slide1" class="controlnet-slide">
+                                <div class="upload-container" id="upload-container1" onclick="document.getElementById('controlnet-upload1').click()">
+                                    <span id="upload-text1">点击上传图片</span>
+                                    <input type="file" id="controlnet-upload1" accept="image/*" onchange="handleImageUpload(1)" style="display: none;">
+                                    <img id="uploaded-image1" class="uploaded-image" src="" alt="已上传的图片" style="display: none;">
+                                    <button class="delete-button" id="delete-button1" onclick="clearImage(1)" style="display: none;">X</button>
+                                </div>
+                                <div class="dropdown-container" id="dropdown-container1" style="display: none; margin-top: 10px;">
+                                <div>
+                                    <select id="controlType1" onchange="updatePreprocessorAndModel(1)">
+                                        <option value=""></option>
+                                        <option value="Canny">硬边缘</option>
+                                        <option value="Depth">深度</option>
+                                        <option value="IP-Adapter">IP-Adapter</option>
+                                        <option value="Instant-ID">Instant-ID</option>
+                                        <option value="InstructP2P">InstructP2P</option>
+                                        <option value="Lineart">线稿</option>
+                                        <option value="MLSD">直线</option>
+                                        <option value="NormalMap">法线贴图</option>
+                                        <option value="OpenPose">姿态</option>
+                                        <option value="Recolor">重上色</option>
+                                        <option value="Reference">参考</option>
+                                        <option value="Revision">Revision</option>
+                                        <option value="Scribble">涂鸦</option>
+                                        <option value="Segmentation">语义分割</option>
+                                        <option value="Shuffle">随机洗牌</option>
+                                        <option value="SoftEdge">软边缘</option>
+                                        <option value="SparseCtrl">稀疏控制</option>
+                                        <option value="T2I-Adapter">T2I-Adapter</option>
+                                        <option value="Tile">分块</option>
+                                        <option value="else">其他</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select id="preprocessor1"></select>
+                                </div>
+                                <div>
+                                    <select id="controlModel1"></select>
+                                </div>
+                                <div>
+                                    <input type="number" id="controlWeight1" placeholder="控制权重" value="1" step="0.05" max="2">
+                                </div>
+                                <div>
+                                    <input type="number" id="startTime1" placeholder="引导介入时机" value="0" step="0.01" max="1">
+                                </div>
+                                <div>
+                                    <input type="number" id="endTime1" placeholder="引导终止时机" value="1" step="0.01" max="1">
+                                </div>
+                                </div>
+                            </div>
+                            <div id="controlnet-slide2" class="controlnet-slide">
+                                <div class="upload-container" id="upload-container2" onclick="document.getElementById('controlnet-upload2').click()">
+                                    <span id="upload-text2">点击上传图片</span>
+                                    <input type="file" id="controlnet-upload2" accept="image/*" onchange="handleImageUpload(2)" style="display: none;">
+                                    <img id="uploaded-image2" class="uploaded-image" src="" alt="已上传的图片" style="display: none;">
+                                    <button class="delete-button" id="delete-button2" onclick="clearImage(2)" style="display: none;">X</button>
+                                </div>
+                                <div class="dropdown-container" id="dropdown-container2" style="display: none; margin-top: 10px;">
+                                    <div>
+                                        <select id="controlType2" onchange="updatePreprocessorAndModel(2)">
+                                            <option value=""></option>
+                                            <option value="Canny">硬边缘</option>
+                                            <option value="Depth">深度</option>
+                                            <option value="IP-Adapter">IP-Adapter</option>
+                                            <option value="Instant-ID">Instant-ID</option>
+                                            <option value="InstructP2P">InstructP2P</option>
+                                            <option value="Lineart">线稿</option>
+                                            <option value="MLSD">直线</option>
+                                            <option value="NormalMap">法线贴图</option>
+                                            <option value="OpenPose">姿态</option>
+                                            <option value="Recolor">重上色</option>
+                                            <option value="Reference">参考</option>
+                                            <option value="Revision">Revision</option>
+                                            <option value="Scribble">涂鸦</option>
+                                            <option value="Segmentation">语义分割</option>
+                                            <option value="Shuffle">随机洗牌</option>
+                                            <option value="SoftEdge">软边缘</option>
+                                            <option value="SparseCtrl">稀疏控制</option>
+                                            <option value="T2I-Adapter">T2I-Adapter</option>
+                                            <option value="Tile">分块</option>
+                                            <option value="else">其他</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <select id="preprocessor2"></select>
+                                    </div>
+                                    <div>
+                                        <select id="controlModel2"></select>
+                                    </div>
+                                    <div>
+                                        <input type="number" id="controlWeight2" placeholder="控制权重" value="1" step="0.05" max="2">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="startTime2" placeholder="引导介入时机" value="0" step="0.01" max="1">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="endTime2" placeholder="引导终止时机" value="1" step="0.01" max="1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="controlnet-slide3" class="controlnet-slide">
+                                <div class="upload-container" id="upload-container3" onclick="document.getElementById('controlnet-upload3').click()">
+                                    <span id="upload-text3">点击上传图片</span>
+                                    <input type="file" id="controlnet-upload3" accept="image/*" onchange="handleImageUpload(3)" style="display: none;">
+                                    <img id="uploaded-image3" class="uploaded-image" src="" alt="已上传的图片" style="display: none;">
+                                    <button class="delete-button" id="delete-button3" onclick="clearImage(3)" style="display: none;">X</button>
+                                </div>
+                                <div class="dropdown-container" id="dropdown-container3" style="display: none; margin-top: 10px;">
+                                    <div>
+                                        <select id="controlType3" onchange="updatePreprocessorAndModel(3)">
+                                            <option value=""></option>
+                                            <option value="Canny">硬边缘</option>
+                                            <option value="Depth">深度</option>
+                                            <option value="IP-Adapter">IP-Adapter</option>
+                                            <option value="Instant-ID">Instant-ID</option>
+                                            <option value="InstructP2P">InstructP2P</option>
+                                            <option value="Lineart">线稿</option>
+                                            <option value="MLSD">直线</option>
+                                            <option value="NormalMap">法线贴图</option>
+                                            <option value="OpenPose">姿态</option>
+                                            <option value="Recolor">重上色</option>
+                                            <option value="Reference">参考</option>
+                                            <option value="Revision">Revision</option>
+                                            <option value="Scribble">涂鸦</option>
+                                            <option value="Segmentation">语义分割</option>
+                                            <option value="Shuffle">随机洗牌</option>
+                                            <option value="SoftEdge">软边缘</option>
+                                            <option value="SparseCtrl">稀疏控制</option>
+                                            <option value="T2I-Adapter">T2I-Adapter</option>
+                                            <option value="Tile">分块</option>
+                                            <option value="else">其他</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <select id="preprocessor3"></select>
+                                    </div>
+                                    <div>
+                                        <select id="controlModel3"></select>
+                                    </div>
+                                    <div>
+                                        <input type="number" id="controlWeight3" placeholder="控制权重" value="1" step="0.05" max="2">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="startTime3" placeholder="引导介入时机" value="0" step="0.01" max="1">
+                                    </div>
+                                    <div>
+                                        <input type="number" id="endTime3" placeholder="引导终止时机" value="1" step="0.01" max="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="controlnet-navigation">
+                            <button onclick="switchControlnetSlide(0)">1</button>
+                            <button onclick="switchControlnetSlide(1)">2</button>
+                            <button onclick="switchControlnetSlide(2)">3</button>
+                        </div>
+                        <div class="image-inversion-container" id="image-inversion-container" style="display: none;">
+                            <div class="upload-container" onclick="document.getElementById('image-inversion-upload').click()">
+                                <span id="image-inversion-text">点击上传图片</span>
+                                <input type="file" id="image-inversion-upload" accept="image/*" onchange="handleImageInversionUpload()" style="display: none;">
+                                <img id="image-inversion-uploaded" class="uploaded-image" src="" alt="已上传的图片" style="display: none;">
+                                <button class="delete-button" id="image-inversion-delete" onclick="clearImageInversion()" style="display: none;">X</button>
+                            </div>
+                            <div class="loading-overlay" id="loading-overlay">
+                                <div class="loading-spinner"></div>
+                            </div>
+                            <button class="send-button" id="image-inversion-send" onclick="sendImageInversion()">发送</button>
+                        </div>
+                        <br>
+                        <div class="model-category-buttons">
+                            <button id="sd-button" onclick="selectCategory('sd')">主模型</button>
+                            <button id="lora-button" onclick="selectCategory('lora')">微调模型</button>
+                            <button id="embedding-button" onclick="selectCategory('embedding')">嵌入式模型</button>
+                        </div>
+
+                        <div id="folder-selection" class="folder-selection">
+                            <!-- 文件夹名称 -->
+                        </div>
+
+                        <div id="model-selection" class="model-selection">
+                            <!-- 模型图片将通过 JavaScript 动态生成 -->
+                        </div>
+                        <div class="image-settings">
+                            <div class="image-settings-row">
+                                <label for="width">宽度</label>
+                                <input type="number" id="width" min="1" max="1024" value="512" oninput="limitMaxValue(this)">
+                                <label for="height">高度</label>
+                                <input type="number" id="height" min="1" max="1024" value="512" oninput="limitMaxValue(this)">
+                            </div>
+                            <div class="image-settings-row">
+                                <label>图像数量(默认1)</label>
+                                <div class="image-count-buttons">
+                                    <button class="image-count" data-count="1" onclick="setImageCount(1)">1</button>
+                                    <button class="image-count" data-count="2" onclick="setImageCount(2)">2</button>
+                                    <button class="image-count" data-count="4" onclick="setImageCount(4)">4</button>
+                                </div>
+                            </div>
+                            <button class="more-options-button" id="more-options-button" onclick="toggleMoreOptions()">高级选项</button>
+                        </div>
+
+                        <div class="more-options-container" id="more-options-container">
+                            <div class="more-options-row">
+                                <label for="cfg-scale">CFG系数</label>
+                                <input type="number" id="cfg-scale" min="1" max="30" value="7">
+                                <label for="steps">迭代步数</label>
+                                <input type="number" id="steps" min="1" max="150" value="20">
+                            </div>
+                            <div class="more-options-row">
+                                <label for="seed">种子值</label>
+                                <input type="text" id="seed" placeholder="默认-1" value="">
+                                <label for="sampling-method">采样方法</label>
+                                <select id="sampling-method" >
+                                    <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
+                                    <option value="DPM++ SDE Karras">DPM++ SDE Karras</option>
+                                    <option value="DPM++ 2M SDE Karras">DPM++ 2M SDE Karras</option>
+                                    <option value="DPM++ 3M SDE Karras">DPM++ 3M SDE Karras</option>
+                                    <option value="DPM++ 2M SDE">DPM++ 2M SDE</option>
+                                    <option value="DPM++ 3M SDE">DPM++ 3M SDE</option>
+                                    <option value="Euler a">Euler a</option>
+                                    <option value="Euler">Euler</option>
+                                    <option value="Restart">Restart</option>
+                                    <option value="UniPC">UniPC</option>
+                                </select>
+                            </div>
+                            <div class="more-options-row">
+                                <label for="skip-layers">跳过层数</label>
+                                <input type="number" id="skip-layers" min="0" max="10" value="2">
+                                <label for="style-prompt">提示词风格</label>
+                                <select id="style-prompt">
+                                    <option value="High quality">高质量</option>
+                                    <option value="Realistic Photo Quality">写实照片质量</option>
+                                    <option value="HanFu">汉服</option>
+                                    <option value="Bling box style">盲盒</option>
+                                    <option value="Model dressing">模特穿衣起手式</option>
+                                    <option value="real person-Negative Prompt">真人负面关键词</option>
+                                    <option value="Real person to anime conversion(2.5D)">真人转动漫(偏向2.5D)</option>
+                                    <option value="Animation to reality">动漫转真人</option>
+                                    <option value="Anime magazine cover">动漫杂志封面</option>
+                                    <option value="Excluding human-Negative Prompt">不包含人的负面提示词</option>
+                                    <option value="Anime quality">二次元质量起手</option>
+                                    <option value="Half body dress up model">半身模特换装预设</option>
+                                    <option value="Retouching">修图专用</option>
+                                    <option value="2.5D-Realistic">2.5D人物模板</option>
+                                    <option value="Basic-Detail image quality">图像细节质量起手式</option>
+                                    <option value="模特">模特</option>
+                                    <option value="logo">logo</option>
+                                </select>
+                            </div>
+                            <div class="more-options-row">
+                                <label for="sd-vae">vae模型</label>
+                                <select id="sd-vae">
+                                    <option value="Automatic">自动</option>
+                                    <option value="None">无</option>
+                                    <option value="kl-f8-anime2.ckpt">kl-f8-anime2</option>
+                                    <option value="vqgan_cfw_00011_vae_only.ckpt">vqgan_cfw_00011_vae_only</option>
+                                    <option value="animevae.pt">二次元</option>
+                                    <option value="Berrey.vae.pt">Berrey</option>
+                                    <option value="model.vae.pt">model</option>
+                                    <option value="Laolei style 2.vae.pt">Laolei style 2</option>
+                                    <option value="blessed2.vae.pt">blessed2</option>
+                                    <option value="orangemix.vae.pt">orangemixt</option>
+                                    <option value="sdxl_vae.safetensors">sdxl_vae</option>
+                                    <option value="vae-84m-pruned_2.0.safetensors">vae-84m-pruned_2.0</option>
+                                    <option value="vae-ft-mse-840000-ema-pruned.safetensors">写实类</option>
+                                </select>
+                            </div>
+                            <button class="adetailer-button" id="adetailer-button" onclick="toggleAdetailerOptions()">ADetailer(yo：多人修复,me:少人修复)</button>
+                            <div class="adetailer-options-container" id="adetailer-options-container">
+                                <div class="adetailer-options-row">
+                                    <label for="adetailer1">设置一</label>
+                                    <label for="adetailer2">设置二</label>
+                                    <label for="adetailer3">设置三</label>
+                                </div>
+                                <div class="adetailer-options-row">
+                                    <select id="adetailer1">
+                                        <option value="None">无</option>
+                                        <option value="hand_yolov8n.pt">手部修复</option>
+                                        <option value="face_yolov8n.pt">脸部修复</option>
+                                        <option value="person_yolov8n-seg.pt">身体结构修复</option>
+                                        <option value="mediapipe_face_full">全脸检测</option>
+                                        <option value="mediapipe_face_short">脸部部分检测</option>
+                                        <option value="mediapipe_face_mesh">脸部全面立体检测</option>
+                                        <option value="mediapipe_face_mesh_eyes_only">面部眼睛检测</option>
+                                    </select>
+                                    <select id="adetailer2">
+                                        <option value="None">无</option>
+                                        <option value="hand_yolov8n.pt">手部修复</option>
+                                        <option value="face_yolov8n.pt">脸部修复</option>
+                                        <option value="person_yolov8n-seg.pt">身体结构修复</option>
+                                        <option value="mediapipe_face_full">全脸检测</option>
+                                        <option value="mediapipe_face_short">脸部部分检测</option>
+                                        <option value="mediapipe_face_mesh">脸部全面立体检测</option>
+                                        <option value="mediapipe_face_mesh_eyes_only">面部眼睛检测</option>
+                                    </select>
+                                    <select id="adetailer3">
+                                        <option value="None">无</option>
+                                        <option value="hand_yolov8n.pt">手部修复</option>
+                                        <option value="face_yolov8n.pt">脸部修复</option>
+                                        <option value="person_yolov8n-seg.pt">身体结构修复</option>
+                                        <option value="mediapipe_face_full">全脸检测</option>
+                                        <option value="mediapipe_face_short">脸部部分检测</option>
+                                        <option value="mediapipe_face_mesh">脸部全面立体检测</option>
+                                        <option value="mediapipe_face_mesh_eyes_only">面部眼睛检测</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="high-res-button" id="high-res-button" onclick="toggleHighResOptions()">高分辨修复</button>
+                            <div class="high-res-options-container" id="high-res-options-container">
+                                 <div class="high-res-options-row">
+                                     <label for="high-res-method">放大算法</label>
+                                     <select id="high-res-method">
+                                         <option value="">无</option>
+                                         <option value="Latent">Latent</option>
+                                         <option value="ESRGAN_4x">ESRGAN_4x</option>
+                                         <option value="R-ESRGAN 4x+">R-ESRGAN 4x+</option>
+                                         <option value="R-ESRGAN 4x+ Anime6B">R-ESRGAN 4x+ Anime6B</option>
+                                         <option value="SwinIR_4x">SwinIR_4x</option>
+                                         <option value="4x-UltraShar">4x-UltraShar</option>
+                                     </select>
+                                     <label for="upscale">放大倍数</label>
+                                     <input type="number" id="upscale" min="1" max="4" value="2" step="0.05">
+                                 </div>
+                                 <div class="high-res-options-row">
+                                     <label for="denoise">重绘幅度</label>
+                                     <input type="number" id="denoise" min="0" max="1" step="0.1" value="0.7">
+                                     <label for="high-res-steps">高分迭代步数</label>
+                                     <input type="number" id="high-res-steps" min="1" max="150" value=0>
+                                 </div>
+                            </div>
+                        </div>
+                    <button class="generate-button" onclick="generateImage()">生成</button>
+                    </div>
+                    <div class="generated-images">
+                        <div class="progress-container" id="progress-container">
+                            <div id="status-message">数据初始化中...</div>
+                            <div id="queue-info"></div>
+                            <div id="tasks-in-progress-info"></div>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                            </div>
+                        </div>
+                        <div class="images-container" id="generated-images">
+                            <div id="current-image-container" style="display:none;">
+                                <img id="current-image" src="" alt="当前生成的图片">
+                            </div>
+                        </div>
+                        <h2>图片展示区域</h2>
+                        <div id="history-records" class="history-records"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <div id="image-modal" class="image-modal">
+            <div class="image-modal-content">
+                <span class="close-button" onclick="closeModal()">&times;</span>
+                <img id="modal-image" src="" alt="生成的图片">
+                <div id="image-info">
+                    <h3>图片信息</h3>
+                    <pre id="image-info-text"></pre>
+                </div>
+                <div class="button-container">
+                    <button id="send-seed-button" class="send-seed-button" onclick="sendSeed()">发送种子值</button>
+                    <button id="send-controlnet1-button" class="send-seed-button" onclick="sendToControlNet1()">发送到控制网1</button>
+                    <button id="send-all-controlnets-button" class="send-seed-button" onclick="sendToAllControlNets()">发送到全部控制网</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <script>
+        let imageCount = 1;
+        let selectedModel = '';
+        let seed = -1;
+        let base64Image = '';
+        let base64ImageInversion = '';
+        let modelInfo = {};
+        let selectedCategory = 'sd';
+        let modelCache = {
+            sd: null,
+            lora: null,
+            embedding: null
+        };
+
+        let selectedSdModel = '';
+        let selectedLoraModels = new Set();
+        let cfgScale = 7;
+        let steps = 20;
+        let generatedImagesInfo = [];
+        let adetailerEnabled = false;
+        let generatedImagesData = [];
+
+        function adjustHeight(element) {
+            element.style.height = 'auto';
+            element.style.height = (element.scrollHeight) + 'px';
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function limitMaxValue(input) {
+            if (parseInt(input.value) > 1024) {
+                input.value = "1024";
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData().then(() => {
+                updateFolderButtonStyles();
+            });
+        });
+
+        function updateButtonStyles(buttons, selectedButton) {
+            buttons.forEach(button => {
+                if (button === selectedButton) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+        }
+
+
+        function setImageCount(count) {
+            imageCount = count;
+            updateButtonStyles(document.querySelectorAll('.image-count'), document.querySelector(`.image-count[data-count="${count}"]`));
+        }
+
+        async function fetchModelData(category) {
+            let url;
+            if (category === 'sd') {
+                url = 'http://localhost:8001/api/model_folders_and_models';
+            } else if (category === 'lora') {
+                url = 'http://localhost:8001/api/lora_folders_and_models';
+            } else if (category === 'embedding') {
+                url = 'http://localhost:8001/api/embedding_folders_and_models';
+            }
+
+            const response = await fetch(url);
+            const data = await response.json();
+            modelCache[category] = data;
+            if (category === 'sd') {
+                updateModelSelection(data);
+            }
+        }
+
+        function updateFolderButtonStyles() {
+            const folderSelectionContainer = document.getElementById('folder-selection');
+            const folders = modelCache[selectedCategory]?.folders;
+
+            if (!folders) {
+                return;
+            }
+
+            folderSelectionContainer.querySelectorAll('button').forEach(button => {
+                const folder = folders.find(folder => folder.name === button.innerText);
+                const hasSelectedModel = folder.models.some(model => {
+                    if (selectedCategory === 'lora') {
+                        return selectedLoraModels.has(model.name);
+                    } else if (selectedCategory === 'sd') {
+                        return model.name === selectedSdModel;
+                    }
+                    return false;
+                });
+
+                if (hasSelectedModel) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+            });
+        }
+
+        function updateModelSelection(data) {
+            const folderSelectionContainer = document.getElementById('folder-selection');
+            folderSelectionContainer.innerHTML = '';
+            const modelSelectionContainer = document.getElementById('model-selection');
+            modelSelectionContainer.innerHTML = '';
+
+            data.folders.forEach(folder => {
+                const button = document.createElement('button');
+                button.innerText = folder.name;
+                button.addEventListener('click', () => {
+                    updateButtonStyles(folderSelectionContainer.querySelectorAll('button'), button);
+                    selectFolder(folder.name);
+                    button.classList.add('selected');
+                });
+                folderSelectionContainer.appendChild(button);
+            });
+
+            if (data.folders.length > 0) {
+                selectFolder(data.folders[0].name);
+            }
+        }
+
+        function selectFolder(folderName) {
+            const selectedFolder = modelCache[selectedCategory].folders.find(folder => folder.name === folderName);
+            const modelSelectionContainer = document.getElementById('model-selection');
+            modelSelectionContainer.innerHTML = '';
+
+            selectedFolder.models.forEach(model => {
+                const figure = document.createElement('figure');
+                figure.classList.add('model-figure');
+
+                const img = document.createElement('img');
+                img.src = model.image_path;
+                img.alt = model.name;
+                img.addEventListener('click', () => {
+                    selectModel(model.name);
+                    updateButtonStyles(document.querySelectorAll('.model-figure img'), img);
+                });
+
+                const figcaption = document.createElement('figcaption');
+                figcaption.textContent = model.name;
+
+                figure.appendChild(img);
+                figure.appendChild(figcaption);
+                modelSelectionContainer.appendChild(figure);
+
+                if (model.name === selectedModel) {
+                    img.classList.add('selected');
+                }
+                if (selectedCategory === 'lora' && selectedLoraModels.has(model.name)) {
+                    img.classList.add('selected');
+                }
+            });
+
+            updateFolderButtonStyles();
+        }
+
+        function selectModel(modelName) {
+            const modelButtons = document.querySelectorAll('.model-selection img');
+
+            if (selectedCategory === 'sd') {
+                modelButtons.forEach(button => {
+                    if (button.alt === modelName) {
+                        button.classList.toggle('selected');
+                    } else {
+                        button.classList.remove('selected');
+                    }
+                });
+                selectedSdModel = modelName;
+                selectedModel = modelName;
+            } else if (selectedCategory === 'lora') {
+                modelButtons.forEach(button => {
+                    if (button.alt === modelName) {
+                        button.classList.toggle('selected');
+                    }
+                });
+                if (selectedLoraModels.has(modelName)) {
+                    selectedLoraModels.delete(modelName);
+                } else {
+                    selectedLoraModels.add(modelName);
+                }
+            }
+
+
+            const promptInput = document.getElementById('prompt');
+            const negativePromptInput = document.getElementById('negative-prompt');
+            const loraTag = `,<lora:${modelName}:1>`;
+            const embeddingTag = `,${modelName}`;
+
+            if (selectedCategory === 'lora') {
+                if (promptInput.value.includes(loraTag)) {
+                    promptInput.value = promptInput.value.replace(loraTag, '').trim();
+                } else {
+                    promptInput.value += ` ${loraTag}`;
+                }
+            }
+
+            if (selectedCategory === 'embedding') {
+                if (negativePromptInput.value.includes(embeddingTag)) {
+                    negativePromptInput.value = negativePromptInput.value.replace(embeddingTag, '').trim();
+                } else {
+                    negativePromptInput.value += ` ${embeddingTag}`;
+                }
+            }
+
+            updateFolderButtonStyles();
+        }
+
+        async function sendRequest(url, payload) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        }
+
+        async function checkTaskStatus(taskId) {
+            const response = await fetch(`http://localhost:8001/task_status/${taskId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data;
+        }
+
+        async function monitorTaskStatus(taskId) {
+            const statusMessage = document.getElementById('status-message');
+            const queueInfo = document.getElementById('queue-info');
+            const tasksInProgressInfo = document.getElementById('tasks-in-progress-info');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+
+            let status = 'queued';
+            let data = null;
+            while (status === 'queued' || status === 'in progress') {
+                data = await checkTaskStatus(taskId);
+
+                if (data.status === 'queued') {
+                    statusMessage.innerText = '排队中...';
+                    queueInfo.innerText = `排队位置: ${data.queue_position}`;
+                    tasksInProgressInfo.innerText = `当前机器执行的任务数: ${data.tasks_in_progress}`;
+                } else if (data.status === 'in progress') {
+                    statusMessage.innerText = '机器正在绘图中...';
+                    queueInfo.innerText = '';
+                    tasksInProgressInfo.innerText = `当前机器执行的任务数: ${data.tasks_in_progress}`;
+                    progressBarFill.style.width = `${data.progress * 100}%`;
+                } else if (data.status === 'completed') {
+                    statusMessage.innerText = '图像已完成，等待机器返回数据';
+                    queueInfo.innerText = '';
+                    tasksInProgressInfo.innerText = '';
+                }
+
+                status = data.status;
+                await new Promise(resolve => setTimeout(resolve, 5000)); // 等待5秒后再次检查
+            }
+
+            return data;
+        }
+
+        async function generateImage() {
+            const prompt = document.getElementById('prompt').value;
+            const negativePrompt = document.getElementById('negative-prompt').value;
+            const width = document.getElementById('width').value;
+            const height = document.getElementById('height').value;
+            const seed = document.getElementById('seed').value;
+            const sample = document.getElementById('sampling-method').value;
+            const style = document.getElementById('style-prompt').value;
+            const vae = document.getElementById('sd-vae').value;
+
+            const controlNet1 = document.getElementById('controlnet-slide1').classList.contains('active');
+            const controlType1 = document.getElementById('controlType1').value;
+            const preprocessor1 = document.getElementById('preprocessor1').value;
+            const controlModel1 = document.getElementById('controlModel1').value;
+            const controlWeight1 = document.getElementById('controlWeight1').value;
+            const startTime1 = document.getElementById('startTime1').value;
+            const endTime1 = document.getElementById('endTime1').value;
+            const controlImage1 = document.getElementById('uploaded-image1').src.split(',')[1];
+
+            const controlNet2 = document.getElementById('controlnet-slide2').classList.contains('active');
+            const controlType2 = document.getElementById('controlType2').value;
+            const preprocessor2 = document.getElementById('preprocessor2').value;
+            const controlModel2 = document.getElementById('controlModel2').value;
+            const controlWeight2 = document.getElementById('controlWeight2').value;
+            const startTime2 = document.getElementById('startTime2').value;
+            const endTime2 = document.getElementById('endTime2').value;
+            const controlImage2 = document.getElementById('uploaded-image2').src.split(',')[1];
+
+            const controlNet3 = document.getElementById('controlnet-slide3').classList.contains('active');
+            const controlType3 = document.getElementById('controlType3').value;
+            const preprocessor3 = document.getElementById('preprocessor3').value;
+            const controlModel3 = document.getElementById('controlModel3').value;
+            const controlWeight3 = document.getElementById('controlWeight3').value;
+            const startTime3 = document.getElementById('startTime3').value;
+            const endTime3 = document.getElementById('endTime3').value;
+            const controlImage3 = document.getElementById('uploaded-image3').src.split(',')[1];
+
+            const cfgScale = document.getElementById('cfg-scale').value;
+            const steps = document.getElementById('steps').value;
+
+            const adetailer1 = document.getElementById('adetailer1').value;
+            const adetailer2 = document.getElementById('adetailer2').value;
+            const adetailer3 = document.getElementById('adetailer3').value;
+
+            const highResMethod = document.getElementById('high-res-method').value;
+            const upscale = document.getElementById('upscale').value;
+            const denoise = document.getElementById('denoise').value;
+            const highResSteps = document.getElementById('high-res-steps').value;
+            const skipLayers = document.getElementById('skip-layers').value;
+
+            const adetailerEnabled = adetailer1 !== 'None' || adetailer2 !== 'None' || adetailer3 !== 'None';
+
+            const progressContainer = document.getElementById('progress-container');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+            const generatedImagesContainer = document.getElementById('generated-images');
+
+            progressContainer.style.display = 'flex';
+            progressBarFill.style.width = '0%';
+            generatedImagesContainer.innerHTML = '';
+
+            const url = 'http://localhost:8001/add_task';
+            const payload = {
+                task_data: {
+                    prompt,
+                    negative_prompt: negativePrompt,
+                    seed: seed,
+                    width: parseInt(width),
+                    height: parseInt(height),
+                    image_count: imageCount,
+                    sd_model_checkpoint: selectedModel,
+                    controlNet: controlNet1 || controlNet2 || controlNet3,
+                    controlNets: [
+                        {
+                            active: controlNet1,
+                            type_value: controlType1,
+                            preprocessor: preprocessor1,
+                            model_value: controlModel1,
+                            controlWeight: controlWeight1,
+                            startTime: startTime1,
+                            endTime: endTime1,
+                            image: controlImage1
+                        },
+                        {
+                            active: controlNet2,
+                            type_value: controlType2,
+                            preprocessor: preprocessor2,
+                            model_value: controlModel2,
+                            controlWeight: controlWeight2,
+                            startTime: startTime2,
+                            endTime: endTime2,
+                            image: controlImage2
+                        },
+                        {
+                            active: controlNet3,
+                            type_value: controlType3,
+                            preprocessor: preprocessor3,
+                            model_value: controlModel3,
+                            controlWeight: controlWeight3,
+                            startTime: startTime3,
+                            endTime: endTime3,
+                            image: controlImage3
+                        }
+                    ],
+                    cfg_scale: cfgScale,
+                    steps: steps,
+                    adetailer: [
+                        { model: adetailer1 },
+                        { model: adetailer2 },
+                        { model: adetailer3 }
+                    ],
+                    adetailerEnabled: adetailerEnabled,
+                    high_res_method: highResMethod,
+                    upscale: upscale,
+                    denoise: denoise,
+                    high_res_steps: highResSteps,
+                    skip_layers: skipLayers,
+                    sample: sample,
+                    style: style,
+                    vae: vae
+                }
+            };
+
+            try {
+                const initialResult = await sendRequest(url, payload);
+                const taskId = initialResult.task_id;
+
+                const result = await monitorTaskStatus(taskId);
+
+                if (!result.images || !result.images.length) {
+                    throw new Error('No images generated');
+                }
+
+                generatedImagesInfo = result.images.map((base64Data, index) => {
+                    const seed = result.seed[index];
+                    const info = result.info_texts[index];
+                    return {
+                        id: `image-${taskId}-${index}`,
+                        base64Data,
+                        info,
+                        seed
+                    };
+                });
+
+
+                const historyRecord = document.createElement('div');
+                historyRecord.className = 'history-record';
+                const timestamp = new Date().toLocaleString();
+                historyRecord.innerHTML = `
+                    <h3>${timestamp}</h3>
+                    <div class="images-container">
+                        ${generatedImagesInfo.map((imageInfo, index) => {
+                            const containerId = imageInfo.id;
+                            return `<div class="image" id="${containerId}" onclick="openModal('${containerId}')">
+                                        <img src="data:image/png;base64,${imageInfo.base64Data}" alt="生成的图片">
+                                    </div>`;
+                        }).join('')}
+                    </div>
+                `;
+                document.getElementById('history-records').prepend(historyRecord);
+
+                generatedImagesData = [...generatedImagesData, ...generatedImagesInfo];
+
+                progressContainer.style.display = 'none';
+
+                document.getElementById('progress-bar-fill').style.width = '0';
+                document.getElementById('status-message').innerText = '';
+                document.getElementById('queue-info').innerText = '';
+                document.getElementById('tasks-in-progress-info').innerText = '';
+            } catch (error) {
+                console.error('Error occurred:', error);
+                progressContainer.style.display = 'none';
+            }
+        }
+
+
+        function openModal(containerId) {
+            const imageData = generatedImagesData.find(img => img.id === containerId);
+            if (imageData) {
+                const modal = document.getElementById('image-modal');
+                const modalImg = document.getElementById('modal-image');
+                const imageInfoText = document.getElementById('image-info-text');
+                const sendSeedButton = document.getElementById('send-seed-button');
+
+                modal.style.display = "block";
+                modalImg.src = `data:image/png;base64,${imageData.base64Data}`;
+                imageInfoText.textContent = imageData.info;
+
+                sendSeedButton.setAttribute('data-seed', imageData.seed);
+            } else {
+                console.error("Invalid image container ID or generatedImagesData is not defined");
+            }
+        }
+
+        function sendSeed() {
+            const sendSeedButton = document.getElementById('send-seed-button');
+            const seed = sendSeedButton.getAttribute('data-seed');
+            const seedInput = document.getElementById('seed');
+            seedInput.value = seed;
+
+            closeModal();
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('image-modal');
+            if (modal) {
+                modal.style.display = "none";
+            } else {
+                console.error('Modal element not found.');
+            }
+        }
+
+        function sendToControlNet1() {
+            const modalImg = document.getElementById('modal-image');
+            if (!modalImg) {
+                console.error('Modal image element not found.');
+                return;
+            }
+
+            const imgSrc = modalImg.src;
+            const uploadedImage1 = document.getElementById('uploaded-image1');
+            if (uploadedImage1) {
+                uploadedImage1.src = imgSrc;
+                uploadedImage1.style.display = 'block';
+            } else {
+                console.error('Uploaded image element for ControlNet1 not found.');
+            }
+
+            const uploadText1 = document.getElementById('upload-text1');
+            if (uploadText1) {
+                uploadText1.style.display = 'none';
+            } else {
+                console.error('Upload text element for ControlNet1 not found.');
+            }
+
+            const deleteButton1 = document.getElementById('delete-button1');
+            if (deleteButton1) {
+                deleteButton1.style.display = 'block';
+            } else {
+                console.error('Delete button element for ControlNet1 not found.');
+            }
+
+            const dropdownContainer1 = document.getElementById('dropdown-container1');
+            if (dropdownContainer1) {
+                dropdownContainer1.style.display = 'grid';
+            } else {
+                console.error('Dropdown container element for ControlNet1 not found.');
+            }
+
+            closeModal();
+        }
+
+        function sendToAllControlNets() {
+            const modalImg = document.getElementById('modal-image');
+            if (!modalImg) {
+                console.error('Modal image element not found.');
+                return;
+            }
+
+            const imgSrc = modalImg.src;
+
+            for (let i = 1; i <= 3; i++) {
+                const uploadedImage = document.getElementById(`uploaded-image${i}`);
+                if (uploadedImage) {
+                    uploadedImage.src = imgSrc;
+                    uploadedImage.style.display = 'block';
+                } else {
+                    console.error(`Uploaded image element for ControlNet${i} not found.`);
+                }
+
+                const uploadText = document.getElementById(`upload-text${i}`);
+                if (uploadText) {
+                    uploadText.style.display = 'none';
+                } else {
+                    console.error(`Upload text element for ControlNet${i} not found.`);
+                }
+
+                const deleteButton = document.getElementById(`delete-button${i}`);
+                if (deleteButton) {
+                    deleteButton.style.display = 'block';
+                } else {
+                    console.error(`Delete button element for ControlNet${i} not found.`);
+                }
+
+                const dropdownContainer = document.getElementById(`dropdown-container${i}`);
+                if (dropdownContainer) {
+                    dropdownContainer.style.display = 'grid';
+                } else {
+                    console.error(`Dropdown container element for ControlNet${i} not found.`);
+                }
+            }
+
+            closeModal();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData().then(() => {
+                updateFolderButtonStyles();
+            });
+        });
+
+
+        async function loadData() {
+            await fetchModelData('sd');
+            await fetchModelData('lora');
+            await fetchModelData('embedding');
+
+        }
+
+
+        function selectCategory(category) {
+            selectedCategory = category;
+            updateButtonStyles(document.querySelectorAll('.model-category-buttons button'), document.getElementById(`${category}-button`));
+            if (modelCache[category]) {
+                updateModelSelection(modelCache[category]);
+            } else {
+                fetchModelData(category);
+            }
+
+            if (selectedCategory === 'sd') {
+                selectModel(selectedSdModel);
+            }
+
+            updateFolderButtonStyles();
+        }
+
+        function toggleControlnet() {
+            const controlnetButton = document.getElementById('controlnet-button');
+            const controlnetSlides = document.getElementById('controlnet-slides');
+            const controlnetNavigation = document.querySelector('.controlnet-navigation');
+
+            if (controlnetButton.classList.contains('active')) {
+                controlnetButton.classList.remove('active');
+                controlnetSlides.style.display = 'none';
+                controlnetNavigation.style.display = 'none';
+            } else {
+                controlnetButton.classList.add('active');
+                controlnetSlides.style.display = 'flex';
+                controlnetNavigation.style.display = 'flex';
+                switchControlnetSlide(0); // 确保首次点击时显示第一个滑块
+            }
+        }
+
+
+        function switchControlnetSlide(index) {
+            const slides = document.querySelectorAll('.controlnet-slide');
+            slides.forEach((slide, i) => {
+                slide.style.display = i === index ? 'flex' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchControlnetSlide(0);
+        });
+
+        function compressImage(base64Str, minDimension, quality, callback) {
+            const img = new Image();
+            img.src = 'data:image/jpeg;base64,' + base64Str;
+
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > minDimension || height > minDimension) {
+                    if (width > height) {
+                        if (width > minDimension) {
+                            height = Math.round(height * (minDimension / width));
+                            width = minDimension;
+                        }
+                    } else {
+                        if (height > minDimension) {
+                            width = Math.round(width * (minDimension / height));
+                            height = minDimension;
+                        }
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                callback(compressedBase64.split(',')[1], width, height);
+            };
+        }
+
+        function handleImageUpload(index) {
+            event.stopPropagation();
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Str = e.target.result.split(',')[1];
+                    compressImage(base64Str, 512, 0.8, (compressedBase64, width, height) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const uploadedImage = document.getElementById(`uploaded-image${index}`);
+                            uploadedImage.src = img.src;
+                            uploadedImage.style.display = 'block';
+
+                            const uploadText = document.getElementById(`upload-text${index}`);
+                            uploadText.style.display = 'none';
+
+                            const dropdownContainer = document.getElementById(`dropdown-container${index}`);
+                            dropdownContainer.style.display = 'grid';
+
+                            const deleteButton = document.getElementById(`delete-button${index}`);
+                            deleteButton.style.display = 'block';
+
+                            document.getElementById('width').value = width;
+                            document.getElementById('height').value = height;
+
+                            if (index === 1) {
+                                base64Image = compressedBase64;
+                            } else if (index === 2) {
+                                base64Image = compressedBase64;
+                            } else if (index === 3) {
+                                base64Image = compressedBase64;
+                            }
+                        };
+                        img.src = 'data:image/jpeg;base64,' + compressedBase64;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+
+        function handleImageInversionUpload() {
+            event.stopPropagation();
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Str = e.target.result.split(',')[1];
+                    compressImage(base64Str, 512, 0.8, (compressedBase64, width, height) => { // 0.8 表示 80% 的图像质量
+                        const img = new Image();
+                        img.onload = () => {
+                            const uploadedImage = document.getElementById('image-inversion-uploaded');
+                            uploadedImage.src = img.src;
+                            uploadedImage.style.display = 'block';
+
+                            const uploadText = document.getElementById('image-inversion-text');
+                            uploadText.style.display = 'none';
+
+                            const deleteButton = document.getElementById('image-inversion-delete');
+                            deleteButton.style.display = 'block';
+
+                            document.getElementById('width').value = width;
+                            document.getElementById('height').value = height;
+
+                            base64ImageInversion = compressedBase64;
+                        };
+                        img.src = 'data:image/jpeg;base64,' + compressedBase64;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearImage(index) {
+            event.stopPropagation();
+            const uploadedImage = document.getElementById(`uploaded-image${index}`);
+            const uploadText = document.getElementById(`upload-text${index}`);
+            const dropdownContainer = document.getElementById(`dropdown-container${index}`);
+            const deleteButton = document.getElementById(`delete-button${index}`);
+            const controlNetUpload = document.getElementById(`controlnet-upload${index}`);
+
+            uploadedImage.src = '';
+            uploadedImage.style.display = 'none';
+            uploadText.style.display = 'block';
+            dropdownContainer.style.display = 'none';
+            deleteButton.style.display = 'none';
+
+            controlNetUpload.value = '';
+
+            document.getElementById(`controlType${index}`).value = '';
+            document.getElementById(`preprocessor${index}`).innerHTML = '';
+            document.getElementById(`controlModel${index}`).innerHTML = '';
+            document.getElementById(`controlWeight${index}`).value = '';
+            document.getElementById(`startTime${index}`).value = '';
+            document.getElementById(`endTime${index}`).value = '';
+        }
+
+        function clearImageInversion() {
+            event.stopPropagation();
+            const uploadedImage = document.getElementById('image-inversion-uploaded');
+            const uploadText = document.getElementById('image-inversion-text');
+            const deleteButton = document.getElementById('image-inversion-delete');
+
+            uploadedImage.src = '';
+            uploadedImage.style.display = 'none';
+            uploadText.style.display = 'block';
+            deleteButton.style.display = 'none';
+        }
+
+        function updatePreprocessorAndModel(index) {
+            const controlType = document.getElementById(`controlType${index}`).value.toLowerCase();
+            const preprocessorSelect = document.getElementById(`preprocessor${index}`);
+            const modelSelect = document.getElementById(`controlModel${index}`);
+
+            const controlNetSlide = document.getElementById(`controlnet-slide${index}`);
+            if (controlType !== '') {
+                controlNetSlide.classList.add('active');
+            } else {
+                controlNetSlide.classList.remove('active');
+            }
+
+            fetch('http://localhost:8001/controlNet/options', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ controlType: controlType })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            })
+            .then(data => {
+                console.log("Received data:", data);
+                preprocessorSelect.innerHTML = '';
+                modelSelect.innerHTML = '';
+
+                data.preprocessorOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    preprocessorSelect.appendChild(opt);
+                });
+
+                data.modelOptions.forEach(option => {
+                    const opt = document.createElement('option');
+                    opt.value = option.value;
+                    opt.textContent = option.text;
+                    modelSelect.appendChild(opt);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function toggleMoreOptions() {
+            const moreOptionsContainer = document.getElementById('more-options-container');
+            const moreOptionsButton = document.getElementById('more-options-button');
+            if (moreOptionsContainer.style.display === 'none' || moreOptionsContainer.style.display === '') {
+                moreOptionsContainer.style.display = 'flex';
+                moreOptionsButton.classList.add('active');
+            } else {
+                moreOptionsContainer.style.display = 'none';
+                moreOptionsButton.classList.remove('active');
+            }
+
+            const highResButton = document.getElementById('high-res-button');
+            const highResOptionsContainer = document.getElementById('high-res-options-container');
+            highResOptionsContainer.style.display = 'none';
+            highResButton.classList.remove('active');
+        }
+
+        function toggleHighResOptions() {
+            const highResOptionsContainer = document.getElementById('high-res-options-container');
+            const highResButton = document.getElementById('high-res-button');
+            if (highResOptionsContainer.style.display === 'none' || highResOptionsContainer.style.display === '') {
+                highResOptionsContainer.style.display = 'block';
+                highResButton.classList.add('active');
+            } else {
+                highResOptionsContainer.style.display = 'none';
+                highResButton.classList.remove('active');
+            }
+        }
+
+        function toggleAdetailerOptions() {
+            const adetailerOptionsContainer = document.getElementById('adetailer-options-container');
+            const adetailerButton = document.getElementById('adetailer-button');
+            if (adetailerOptionsContainer.style.display === 'none' || adetailerOptionsContainer.style.display === '') {
+                adetailerOptionsContainer.style.display = 'block';
+                adetailerButton.classList.add('active');
+            } else {
+                adetailerOptionsContainer.style.display = 'none';
+                adetailerButton.classList.remove('active');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateFolderButtonStyles();
+        });
+
+        document.getElementById('aichat').addEventListener('click', (event) => {
+            event.preventDefault();
+            window.location.href = '/aichat';
+        });
+
+        document.getElementById('demos').addEventListener('click', (event) => {
+            event.preventDefault();
+            window.location.href = '/demos';
+        });
+
+        function updateContentSection(activeSectionId) {
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            document.getElementById(activeSectionId).classList.add('active');
+        }
+
+        function toggleAssistant() {
+            const assistantContainer = document.getElementById('assistant-container');
+            const assistantButton = document.getElementById('assistant-button');
+            if (assistantContainer.style.display === 'none') {
+                assistantContainer.style.display = 'block';
+                assistantButton.style.backgroundColor = '#6c63ff';
+            } else {
+                assistantContainer.style.display = 'none';
+                assistantButton.style.backgroundColor = 'white';
+            }
+        }
+
+        function sendAssistantContent() {
+            const assistantInput = document.getElementById('assistant-input').value;
+            const selectedModel = document.getElementById('model-select').value;
+
+            const data = {
+                input: assistantInput,
+                model: selectedModel
+            };
+
+            fetch('http://localhost:8001/process-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('prompt').value = data.reply;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function sendImageInversion() {
+            const uploadedImage = base64ImageInversion;
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            loadingOverlay.style.display = 'flex';
+            fetch('http://localhost:8001/process-image-inversion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: uploadedImage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    document.getElementById('prompt').value = data.join(', ');
+                    console.log("Inverted prompt set successfully.");
+                } else {
+                    console.error('Server response is not in expected format:', data);
+                }
+            })
+            .catch(error => console.error('Error:', error))
+            .finally(() => {
+                // 隐藏loading动画
+                loadingOverlay.style.display = 'none';
+                console.log("Loading overlay hidden.");
+            });
+        }
+
+        function toggleImageInversion() {
+            const imageInversionButton = document.getElementById('image-inversion-button');
+            const imageInversionContainer = document.getElementById('image-inversion-container');
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            loadingOverlay.style.display = 'none';
+
+            if (imageInversionContainer.style.display === 'none' || imageInversionContainer.style.display === '') {
+                imageInversionContainer.style.display = 'flex';
+                imageInversionButton.classList.add('active');
+            } else {
+                imageInversionContainer.style.display = 'none';
+                imageInversionButton.classList.remove('active');
+            }
+        }
+        function goToPromptMarket() {
+            window.location.href = '/prompt';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('data');
+
+            if (data) {
+                try {
+                    const imageInfo = JSON.parse(decodeURIComponent(data));
+
+                    // 将数据填充到相应的输入框中
+                    if (imageInfo.prompt) {
+                        document.getElementById('prompt').value = imageInfo.prompt;
+                    }
+                    if (imageInfo.negative_prompt) {
+                        document.getElementById('negative-prompt').value = imageInfo.negative_prompt;
+                    }
+                    if (imageInfo.cfg_scale) {
+                        document.getElementById('cfg-scale').value = imageInfo.cfg_scale;
+                    }
+                    if (imageInfo.steps) {
+                        document.getElementById('steps').value = imageInfo.steps;
+                    }
+                    if (imageInfo.seed) {
+                        document.getElementById('seed').value = imageInfo.seed;
+                    }
+                    if (imageInfo.sd_model_checkpoint) {
+                        selectModel(imageInfo.sd_model_checkpoint);
+                    }
+                    if (imageInfo.width) {
+                        document.getElementById('width').value = imageInfo.width;
+                    }
+                    if (imageInfo.height) {
+                        document.getElementById('height').value = imageInfo.height;
+                    }
+                    if (imageInfo.adetailer_model) {
+                        document.getElementById('adetailer1').value = imageInfo.adetailer_model;
+                    }
+                    if (imageInfo.adetailer_model_2nd) {
+                        document.getElementById('adetailer2').value = imageInfo.adetailer_model_2nd;
+                    }
+                    if (imageInfo.high_res_method) {
+                        document.getElementById('high-res-method').value = imageInfo.high_res_method;
+                    }
+                    if (imageInfo.denoise) {
+                        document.getElementById('denoise').value = imageInfo.denoise;
+                    }
+                    if (imageInfo.skip_layers) {
+                        document.getElementById('skip-layers').value = imageInfo.skip_layers;
+                    }
+                } catch (error) {
+                    console.error('Error parsing received data:', error);
+                }
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const promptContent = params.get('prompt');
+            const negativePromptContent = params.get('negative-prompt');
+
+            if (promptContent) {
+                const promptTextarea = document.getElementById('prompt');
+                promptTextarea.value = promptContent;
+            }
+
+            if (negativePromptContent) {
+                const negativePromptInput = document.getElementById('negative-prompt');
+                negativePromptInput.value = negativePromptContent;
+            }
+        });
+    </script>
+</body>
+</html>
