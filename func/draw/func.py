@@ -1,14 +1,224 @@
 import base64
 import io
+import logging
 import os
 import random
+import re
 import string
+import time
+from asyncio import Queue
+
+import requests
 from PIL import Image
 
 import webuiapi
 
 api = webuiapi.WebUIApi(host='127.0.0.1', port=7860)
 api.set_auth('panllq', 'Pan.960327')
+
+API_URL = 'http://127.0.0.1:7860'
+HEADERS = {
+    "Authorization": "Basic cGFubGxxOlBhbi45NjAzMjc="
+}
+
+# 设置日志记录
+logging.basicConfig(level=logging.DEBUG)
+
+# 任务ID列表
+task_id_list = []
+task_queue = Queue()
+tasks_in_progress = {}
+current_task_id = None
+
+tasks = {}
+#图像反推的方法体
+def set_chrome_window_position():
+    import pygetwindow as gw
+    import pyautogui
+
+    # 获取所有标题中包含“Chrome”的窗口
+    windows = gw.getWindowsWithTitle('Chrome')
+    if windows:
+        chrome_window = windows[0]
+        # 获取屏幕宽高
+        screen_width, screen_height = pyautogui.size()
+        # 设置Chrome窗口的宽高
+        chrome_width, chrome_height = 800, 1200
+        chrome_window.resizeTo(chrome_width, chrome_height)
+        # 将Chrome窗口移动到屏幕的右下角
+        chrome_window.moveTo(screen_width - chrome_width, screen_height - chrome_height)
+
+
+def click_button(driver, ID):
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.common.by import By
+
+    wait = WebDriverWait(driver, 60)
+    try:
+        # 等待按钮出现并点击
+        generate_button = wait.until(
+            EC.presence_of_element_located((By.ID, ID))
+        )
+        generate_button.click()
+    except Exception as e:
+        print(f"点击生成按钮时遇到异常: {e}")
+
+
+def input_image(driver, upload_div, filepath):
+    from selenium.webdriver.common.by import By
+
+    try:
+        # 查找文件输入框并上传文件
+        file_input = upload_div.find_element(By.CSS_SELECTOR, "input[type='file']")
+        file_input.send_keys(filepath)
+    except Exception as e:
+        print(f"使用CSS Selector定位文件输入框失败: {e}")
+        raise e
+
+
+def get_top_30_texts_with_confidence_above_threshold(driver, threshold=0.1, max_scan_time=2):
+    from selenium.webdriver.common.by import By
+    import time
+
+    try:
+        start_time = time.time()
+        # 获取所有包含置信度的元素集
+        confidence_sets = driver.find_elements(By.CSS_SELECTOR, ".confidence-set.group.svelte-75gm11")
+        result_texts = []
+        processed_count = 0
+        start_index = 2  # 跳过前两个元素
+
+        # 遍历所有置信度元素集
+        for set_index, set in enumerate(confidence_sets):
+            if processed_count >= 30:
+                break
+            if time.time() - start_time > max_scan_time:
+                break
+            # 获取文本和置信度元素
+            texts = set.find_elements(By.CSS_SELECTOR, ".text.svelte-75gm11")
+            confidences = set.find_elements(By.CSS_SELECTOR, ".confidence.svelte-75gm11")
+
+            # 遍历文本和置信度，筛选置信度高于阈值的文本
+            for text, confidence in zip(texts[start_index:], confidences[start_index:]):
+                confidence_value = confidence.text.strip('%')
+                if confidence_value:
+                    confidence_value = float(confidence_value)
+                    if confidence_value > (threshold * 100):
+                        result_texts.append(text.text)
+                        processed_count += 1
+                        if processed_count >= 30:
+                            break
+
+            start_index = max(0, start_index - len(texts))
+
+        return result_texts
+    except Exception as e:
+        print("获取值时遇到异常:", e)
+    return []
+
+
+def generate_image_from_image(filepath):
+    global driver, texts_above_threshold
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.common.by import By
+
+    try:
+        options = Options()
+        options.add_argument("--disable-extensions")
+        options.add_argument("--disable-popup-blocking")
+        driver = webdriver.Chrome(options=options)
+        set_chrome_window_position()
+        driver.get('http://127.0.0.1:7860')
+
+        WebDriverWait(driver, 60).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(text(),'WD 1.4 标签器')]"))
+        ).click()
+
+        upload_div = WebDriverWait(driver, 60).until(
+            EC.presence_of_element_located((By.ID, "tab_tagger"))
+        )
+
+        input_image(driver, upload_div, filepath)
+        while True:
+            texts_above_threshold = get_top_30_texts_with_confidence_above_threshold(driver)
+            if texts_above_threshold:
+                logging.debug(f"Texts above threshold: {texts_above_threshold}")
+                return texts_above_threshold
+
+    except Exception as e:
+        logging.error(f"Error generating image: {e}")
+    finally:
+        driver.quit()
+
+
+#图像反推
+#########################################################################################
+
+
+def check_progress():
+    global current_task_id
+    while True:
+        if current_task_id is not None:
+            try:
+                progress_response = requests.get(f'{API_URL}/sdapi/v1/progress', headers=HEADERS, timeout=180)
+                if progress_response.status_code == 200:
+                    progress_data = progress_response.json()
+                    eta_relative = progress_data.get('eta_relative', None)
+                    progress = progress_data.get('progress', 0.0)
+                    # 更新任务进度
+                    tasks_in_progress[current_task_id]['progress'] = progress
+                    # 检查机器是否空闲
+                    if eta_relative == 0.0 and progress == 0.0:
+                        print("Machine is idle, checking for next task.")
+                        tasks_in_progress[current_task_id]['status'] = 'completed'
+                        task_id_list.remove(current_task_id)  # 从任务ID列表中删除已完成的任务
+                        current_task_id = None  # 当前任务完成，设置为 None 以开始下一个任务
+                else:
+                    tasks_in_progress[current_task_id]['status'] = 'failed'
+            except Exception as e:
+                tasks_in_progress[current_task_id]['status'] = f'failed: {str(e)}'
+                print(f"Exception in task {current_task_id}: {e}")
+
+        if current_task_id is None and not task_queue.empty():
+            # 当前没有任务，且队列不为空，启动下一个任务
+            current_task_id, task_data = task_queue.get()
+            tasks_in_progress[current_task_id] = {'status': 'in progress', 'progress': 0.0}
+            print(f"Started processing task {current_task_id}")
+
+            try:
+                # 调用 /generate_images 端点生成图像
+                generate_response = requests.post('https://panllq.cpolar.top/generate_images', json=task_data,
+                                                  headers=HEADERS, timeout=180)
+                print("generate_response:", generate_response)
+                if generate_response.status_code == 200:
+                    result = generate_response.json()
+                    tasks_in_progress[current_task_id]['images'] = result.get('images', [])
+                    tasks_in_progress[current_task_id]['info_texts'] = result.get('info_texts', [])
+                    tasks_in_progress[current_task_id]['seed'] = [extract_seed(info_text) for info_text in
+                                                                  result.get('info_texts', [])]
+                    tasks_in_progress[current_task_id]['status'] = 'completed'
+                    print(f"Generated images for task {current_task_id}")
+                else:
+                    tasks_in_progress[current_task_id]['status'] = 'failed'
+                    print(f"Failed to generate images for task {current_task_id}")
+
+                task_id_list.remove(current_task_id)  # 从任务ID列表中删除已完成的任务
+                current_task_id = None  # 任务完成，设置为 None 以开始下一个任务
+                task_queue.task_done()
+                continue  # 继续处理队列中的下一个任务
+            except Exception as e:
+                tasks_in_progress[current_task_id]['status'] = f'failed: {str(e)}'
+                print(f"Exception in task {current_task_id}: {e}")
+                current_task_id = None
+                task_queue.task_done()
+                continue
+
+        time.sleep(5)  # 每5秒检查一次任务进度
+
 
 
 def generate_random_filename(extension=".png"):
@@ -40,6 +250,14 @@ def base64_to_image(base64_str, output_dir):
     except Exception as e:
         print(f"Error processing image: {e}")
         return None
+
+def extract_seed(info_text):
+    seed_regex = r"Seed:\s*(\d+)"
+    match = re.search(seed_regex, info_text)
+    if match:
+        return match.group(1)
+    return None
+
 
 def moRen(translated_prompt, translated_negativePrompt, seed, style, cfg_scale, sample, steps, width, height,
           image_count, sd_model_checkpoint, vae, skip_layers):
