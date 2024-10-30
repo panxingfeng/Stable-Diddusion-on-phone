@@ -1,10 +1,10 @@
 需要申请一个网址，可以使用cpolar内网穿透，把端口号设置成main方法中的端口号就行
 
-SD下载链接：https://pan.baidu.com/s/1-QuPJvJ2IQKrzcC6IeDzMg?pwd=miie 提取码: miie 
+[SD下载链接]()（近期内上传）
 
-controlNet下载链接： https://pan.baidu.com/s/1ww_jkK9BAGKAxjBYcVaKRQ?pwd=rajn 提取码: rajn 
+[controlNet下载链接](https://pan.baidu.com/s/1ww_jkK9BAGKAxjBYcVaKRQ?pwd=rajn)
 
-需要注册一个azure的账户，链接：https://learn.microsoft.com/zh-cn/azure/storage/blobs/storage-quickstart-blobs-portal
+需要注册一个azure的账户，[链接](https://learn.microsoft.com/zh-cn/azure/storage/blobs/storage-quickstart-blobs-portal)
 
 myaccount：你的Azure存储帐户的名称
 
